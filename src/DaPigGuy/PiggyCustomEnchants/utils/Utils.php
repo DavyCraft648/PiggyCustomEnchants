@@ -175,10 +175,14 @@ class Utils
         return true;
     }
 
-    public static function displayEnchants(ItemStack $itemStack): ItemStack
+    public static function displayEnchants(ItemStack $itemStack, TypeConverter $typeConverter): ItemStack
     {
         $plugin = CustomEnchantManager::getPlugin();
-        $item = TypeConverter::getInstance()->netItemStackToCore($itemStack);
+        $enchantments = $itemStack->getNbt()?->getListTag(Item::TAG_ENCH);
+        if ($enchantments === null) {
+            return $itemStack;
+        }
+        $item = $typeConverter->netItemStackToCore($itemStack);
         if (count($item->getEnchantments()) > 0) {
             $additionalInformation = $plugin->getConfig()->getNested("enchants.position") === "name" ? TextFormat::RESET . TextFormat::WHITE . $item->getName() : "";
             foreach ($item->getEnchantments() as $enchantmentInstance) {
@@ -197,12 +201,16 @@ class Utils
             }
         }
         if (CustomEnchantManager::getPlugin()->getDescription()->getName() !== "PiggyCustomEnchants" || !in_array("DaPigGuy", CustomEnchantManager::getPlugin()->getDescription()->getAuthors(), true)) $item->getNamedTag()->setString("LolGetRekted", "Loser");
-        return TypeConverter::getInstance()->coreItemStackToNet($item);
+        return $typeConverter->coreItemStackToNet($item);
     }
 
-    public static function filterDisplayedEnchants(ItemStack $itemStack): ItemStack
+    public static function filterDisplayedEnchants(ItemStack $itemStack, TypeConverter $typeConverter): ItemStack
     {
-        $item = TypeConverter::getInstance()->netItemStackToCore($itemStack);
+        $enchantments = $itemStack->getNbt()?->getListTag(Item::TAG_ENCH);
+        if ($enchantments === null) {
+            return $itemStack;
+        }
+        $item = $typeConverter->netItemStackToCore($itemStack);
         $tag = $item->getNamedTag();
         if (count($item->getEnchantments()) > 0) $tag->removeTag(Item::TAG_DISPLAY);
         if ($tag->getTag("OriginalDisplayTag") instanceof CompoundTag) {
@@ -210,7 +218,7 @@ class Utils
             $tag->removeTag("OriginalDisplayTag");
         }
         $item->setNamedTag($tag);
-        return TypeConverter::getInstance()->coreItemStackToNet($item);
+        return $typeConverter->coreItemStackToNet($item);
     }
 
     /**

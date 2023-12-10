@@ -32,7 +32,10 @@ use pocketmine\data\bedrock\EffectIdMap;
 use pocketmine\entity\effect\Effect;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\entity\EntityFactory;
+use pocketmine\item\VanillaItems;
 use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\network\mcpe\convert\TypeConverter;
+use pocketmine\plugin\DisablePluginException;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\world\World;
@@ -56,8 +59,7 @@ class PiggyCustomEnchants extends PluginBase
         ) {
             if (!class_exists($class)) {
                 $this->getLogger()->error($virion . " virion not found. Download PiggyCustomEnchants at https://poggit.pmmp.io/p/PiggyCustomEnchants for a pre-compiled phar.");
-                $this->getServer()->getPluginManager()->disablePlugin($this);
-                return;
+                throw new DisablePluginException();
             }
         }
 
@@ -159,8 +161,9 @@ class PiggyCustomEnchants extends PluginBase
     private static function registerItemsAndBlocks(): void
     {
         CustomiesItemFactory::getInstance()->registerItem(PiggyEnchantedBookItem::class, "piggyce:enchanted_book", "Enchanted Book");
+        $id = BlockTypeIds::newId();
         CustomiesBlockFactory::getInstance()->registerBlock(
-            static fn() => new PiggyObsidianBlock(new BlockIdentifier(BlockTypeIds::newId()), "Magmawalker Obsidian", new BlockTypeInfo(BlockBreakInfo::instant())),
+            static fn() => new PiggyObsidianBlock(new BlockIdentifier($id), "Magmawalker Obsidian", new BlockTypeInfo(BlockBreakInfo::instant())),
             "piggyce:magmawalker_obsidian",
         );
     }

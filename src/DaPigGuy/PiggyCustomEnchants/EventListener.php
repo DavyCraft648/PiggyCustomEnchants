@@ -53,6 +53,7 @@ use pocketmine\network\mcpe\protocol\types\inventory\ItemStackWrapper;
 use pocketmine\network\mcpe\protocol\types\PlayerAction;
 use pocketmine\network\mcpe\protocol\types\PlayerBlockActionWithBlockInfo;
 use pocketmine\player\Player;
+use function array_key_first;
 
 class EventListener implements Listener
 {
@@ -72,11 +73,12 @@ class EventListener implements Listener
     public function onDataPacketReceive(DataPacketReceiveEvent $event): void
     {
         $packet = $event->getPacket();
+        $typeConverter = $event->getOrigin()->getTypeConverter();
         if ($packet instanceof InventoryTransactionPacket) {
             $transaction = $packet->trData;
             foreach ($transaction->getActions() as $action) {
-                $action->oldItem = new ItemStackWrapper($action->oldItem->getStackId(), Utils::filterDisplayedEnchants($action->oldItem->getItemStack()));
-                $action->newItem = new ItemStackWrapper($action->newItem->getStackId(), Utils::filterDisplayedEnchants($action->newItem->getItemStack()));
+                $action->oldItem = new ItemStackWrapper($action->oldItem->getStackId(), Utils::filterDisplayedEnchants($action->oldItem->getItemStack(), $typeConverter));
+                $action->newItem = new ItemStackWrapper($action->newItem->getStackId(), Utils::filterDisplayedEnchants($action->newItem->getItemStack(), $typeConverter));
             }
         }
         if ($packet instanceof PlayerActionPacket) {
@@ -94,19 +96,20 @@ class EventListener implements Listener
                 }
             }
         }
-        if ($packet instanceof MobEquipmentPacket) Utils::filterDisplayedEnchants($packet->item->getItemStack());
+        if ($packet instanceof MobEquipmentPacket) Utils::filterDisplayedEnchants($packet->item->getItemStack(), $typeConverter);
     }
 
     public function onDataPacketSend(DataPacketSendEvent $event): void
     {
         $packets = $event->getPackets();
+        $typeConverter = $event->getTargets()[array_key_first($event->getTargets())]->getTypeConverter();
         foreach ($packets as $packet) {
             if ($packet instanceof InventorySlotPacket) {
-                $packet->item = new ItemStackWrapper($packet->item->getStackId(), Utils::displayEnchants($packet->item->getItemStack()));
+                $packet->item = new ItemStackWrapper($packet->item->getStackId(), Utils::displayEnchants($packet->item->getItemStack(), $typeConverter));
             }
             if ($packet instanceof InventoryContentPacket) {
                 foreach ($packet->items as $i => $item) {
-                    $packet->items[$i] = new ItemStackWrapper($item->getStackId(), Utils::displayEnchants($item->getItemStack()));
+                    $packet->items[$i] = new ItemStackWrapper($item->getStackId(), Utils::displayEnchants($item->getItemStack(), $typeConverter));
                 }
             }
         }

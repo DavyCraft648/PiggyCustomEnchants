@@ -14,7 +14,6 @@ use pocketmine\inventory\Inventory;
 use pocketmine\item\enchantment\Rarity;
 use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\NetworkBroadcastUtils;
 use pocketmine\network\mcpe\protocol\BlockActorDataPacket;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
@@ -66,7 +65,7 @@ class HallucinationEnchant extends ReactiveEnchantment
                                             ])
                                         )));
                                 }
-                                $blockTranslator = TypeConverter::getInstance()->getBlockTranslator();
+                                $blockTranslator = $entity->getNetworkSession()->getTypeConverter()->getBlockTranslator();
                                 $packets[] = UpdateBlockPacket::create(BlockPosition::fromVector3($position->floor()), $blockTranslator->internalIdToNetworkId($block->getStateId()), UpdateBlockPacket::FLAG_NETWORK, UpdateBlockPacket::DATA_LAYER_NORMAL);
                             }
                         }
@@ -83,7 +82,7 @@ class HallucinationEnchant extends ReactiveEnchantment
                             }
                         }
                     }
-                    NetworkBroadcastUtils::broadcastPackets([$entity], $entity->getWorld()->createBlockUpdatePackets($blocks));
+                    NetworkBroadcastUtils::broadcastPackets([$entity], $entity->getWorld()->createBlockUpdatePackets($entity->getNetworkSession()->getTypeConverter(), $blocks));
                     unset(self::$hallucinating[$entity->getName()]);
                 }), 20 * 60);
             }
